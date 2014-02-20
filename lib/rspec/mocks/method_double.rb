@@ -57,6 +57,7 @@ module RSpec
         save_original_method!
 
         object_singleton_class.class_exec(self, method_name, visibility) do |method_double, method_name, visibility|
+          undef_method(method_name) if method_defined? method_name
           define_method(method_name) do |*args, &block|
             method_double.proxy_method_invoked(self, *args, &block)
           end
