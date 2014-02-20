@@ -180,15 +180,19 @@ module RSpec
 
         if RUBY_VERSION >= '2.0.0'
           context "with a prepended module (ruby 2.0.0+)" do
-            before do
-              mod = Module.new do
-                def existing_instance_method
-                  "#{super}_prepended".to_sym
-                end
+            module ToBePrepended
+              def existing_method
+                "#{super}_prepended".to_sym
               end
+            end
 
-              @prepended_class = Class.new(@class) do
-                prepend mod
+            before do
+              @prepended_class = Class.new do
+                prepend ToBePrepended
+
+                def existing_method
+                  :original_value
+                end
 
                 def non_prepended_method
                   :not_prepended
@@ -198,11 +202,11 @@ module RSpec
             end
 
             it "restores prepended instance methods" do
-              allow(@prepended_instance).to receive(:existing_instance_method) { :stubbed }
-              expect(@prepended_instance.existing_instance_method).to eq :stubbed
+              allow(@prepended_instance).to receive(:existing_method) { :stubbed }
+              expect(@prepended_instance.existing_method).to eq :stubbed
 
               reset @prepended_instance
-              expect(@prepended_instance.existing_instance_method).to eq :original_value_prepended
+              expect(@prepended_instance.existing_method).to eq :original_value_prepended
             end
 
             it "restores non-prepended instance methods" do
@@ -211,6 +215,21 @@ module RSpec
 
               reset @prepended_instance
               expect(@prepended_instance.non_prepended_method).to eq :not_prepended
+            end
+
+            it "restores prepended class methods" do
+              klass = Class.new do
+                class << self; prepend ToBePrepended; end
+                def self.existing_method
+                  :original_value
+                end
+              end
+
+              allow(klass).to receive(:existing_method) { :stubbed }
+              expect(klass.existing_method).to eq :stubbed
+
+              reset klass
+              expect(klass.existing_method).to eq :original_value_prepended
             end
           end
         end
