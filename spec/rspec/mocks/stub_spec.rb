@@ -74,6 +74,28 @@ module RSpec
         expect(@instance.msg2).to eq(2)
       end
 
+      context "stubbing with prepend", :if => (RUBY_VERSION >= '2.0.0'), :order => :defined do
+        module ToBePrepended
+          def value
+            super
+          end
+        end
+
+        it "handles stubbing prepended methods" do
+          klass = Class.new { prepend ToBePrepended; def value; :original; end }
+          instance = klass.new
+          instance.stub(:value => :stubbed)
+          expect(instance.value).to eq :stubbed
+        end
+
+        it "handles stubbing prepended methods on singleton class" do
+          klass = Class.new { class << self; prepend ToBePrepended; end; def self.value; :original; end }
+          expect(klass.value).to eq :original
+          klass.stub(:value => :stubbed)
+          expect(klass.value).to eq :stubbed
+        end
+      end
+
       describe "#rspec_reset" do
         it "removes stubbed methods that didn't exist" do
           allow(@instance).to receive(:non_existent_method)
