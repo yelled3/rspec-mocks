@@ -91,8 +91,8 @@ module RSpec
       describe 'when verifying fails' do
         it 'cleans up all remaining expectations' do
           expect(obj).to receive_messages(:a => 1, :b => 2)
-          expect { RSpec::Mocks.space.verify_all }.to raise_error RSpec::Mocks::MockExpectationError
-          expect { RSpec::Mocks.space.verify_all }.not_to raise_error
+          expect { verify_all }.to raise_error RSpec::Mocks::MockExpectationError
+          expect { verify_all }.not_to raise_error
         end
       end
 
