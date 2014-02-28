@@ -56,7 +56,7 @@ module RSpec
 
         save_original_method!
 
-        if is_prepended?
+        if has_prepended_module?
           mod = Module.new
           define_proxy_method_on mod
           object_singleton_class.__send__ :prepend, mod
@@ -80,11 +80,12 @@ module RSpec
         return show_frozen_warning if object_singleton_class.frozen?
         return unless @method_is_proxied
 
-        if is_prepended?
+        if has_prepended_module?
           object_singleton_class.ancestors.first.__send__(:remove_method, @method_name)
         else
           object_singleton_class.__send__(:remove_method, @method_name)
         end
+
         if @method_stasher.method_is_stashed?
           @method_stasher.restore
         end
@@ -210,7 +211,7 @@ module RSpec
 
     private
 
-      def is_prepended?
+      def has_prepended_module?
         Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.method(method_name)
       end
 
