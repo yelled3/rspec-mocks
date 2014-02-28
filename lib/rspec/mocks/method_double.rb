@@ -208,7 +208,7 @@ module RSpec
       if RUBY_VERSION.to_f >= 2.0
 
         def has_prepended_module?
-          Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.method(method_name)
+          Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.methods.map(&:to_s).include?(method_name.to_s)
         end
 
         def definition_target
