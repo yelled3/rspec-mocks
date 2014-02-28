@@ -55,7 +55,12 @@ module RSpec
         return if @method_is_proxied
 
         save_original_method!
-        define_proxy_method_on definition_target
+        definition_target.class_exec(self, method_name, visibility) do |method_double, method_name, visibility|
+          define_method(method_name) do |*args, &block|
+            method_double.proxy_method_invoked(self, *args, &block)
+          end
+          self.__send__ visibility, method_name
+        end
 
         @method_is_proxied = true
       end
@@ -200,33 +205,30 @@ module RSpec
 
     private
 
-      def has_prepended_module?
-        Class === @object &&
-        object_singleton_class.ancestors.first != object_singleton_class &&
-        @object.method(method_name) &&
-        RUBY_VERSION.to_f >= 2.1
-      end
+      if RUBY_VERSION.to_f > 2.0
 
-      def define_proxy_method_on(target)
-        target.class_exec(self, method_name, visibility) do |method_double, method_name, visibility|
-          define_method(method_name) do |*args, &block|
-            method_double.proxy_method_invoked(self, *args, &block)
-          end
-          self.__send__ visibility, method_name
+        def has_prepended_module?
+          Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.method(method_name)
         end
-      end
 
-      def definition_target
-        @definition_target ||=
-          if has_prepended_module?
-            mod = Module.new
-            object_singleton_class.__send__ :prepend, mod
-            mod
-          else
-            object_singleton_class
-          end
-      end
+        def definition_target
+          @definition_target ||=
+            if has_prepended_module?
+              mod = Module.new
+              object_singleton_class.__send__ :prepend, mod
+              mod
+            else
+              object_singleton_class
+            end
+        end
 
+      else
+
+        def definition_target
+          object_singleton_class
+        end
+
+      end
     end
   end
 end
