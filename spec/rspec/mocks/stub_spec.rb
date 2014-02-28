@@ -74,7 +74,7 @@ module RSpec
         expect(@instance.msg2).to eq(2)
       end
 
-      context "stubbing with prepend", :if => (RUBY_VERSION >= '2.0.0'), :order => :defined do
+      context "stubbing with prepend", :if => (RUBY_VERSION.to_i >= 2), :order => :defined do
         module ToBePrepended
           def value
             super
