@@ -56,12 +56,12 @@ module RSpec
 
         save_original_method!
 
-        object_singleton_class.class_exec(self, method_name, visibility) do |method_double, method_name, visibility|
-          undef_method(method_name) if method_defined? method_name
-          define_method(method_name) do |*args, &block|
-            method_double.proxy_method_invoked(self, *args, &block)
-          end
-          self.__send__ visibility, method_name
+        if is_prepended?
+          mod = Module.new
+          define_proxy_method_on mod
+          object_singleton_class.__send__ :prepend, mod
+        else
+          define_proxy_method_on object_singleton_class
         end
 
         @method_is_proxied = true
@@ -80,7 +80,11 @@ module RSpec
         return show_frozen_warning if object_singleton_class.frozen?
         return unless @method_is_proxied
 
-        object_singleton_class.__send__(:remove_method, @method_name)
+        if is_prepended?
+          object_singleton_class.ancestors.first.__send__(:remove_method, @method_name)
+        else
+          object_singleton_class.__send__(:remove_method, @method_name)
+        end
         if @method_stasher.method_is_stashed?
           @method_stasher.restore
         end
@@ -203,6 +207,22 @@ module RSpec
       def raise_method_not_stubbed_error
         raise MockExpectationError, "The method `#{method_name}` was not stubbed or was already unstubbed"
       end
+
+    private
+
+      def is_prepended?
+        Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.method(method_name)
+      end
+
+      def define_proxy_method_on(target)
+        target.class_exec(self, method_name, visibility) do |method_double, method_name, visibility|
+          define_method(method_name) do |*args, &block|
+            method_double.proxy_method_invoked(self, *args, &block)
+          end
+          self.__send__ visibility, method_name
+        end
+      end
+
     end
   end
 end
