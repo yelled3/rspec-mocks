@@ -201,7 +201,10 @@ module RSpec
     private
 
       def has_prepended_module?
-        Class === @object && object_singleton_class.ancestors.first != object_singleton_class && @object.method(method_name)
+        Class === @object &&
+        object_singleton_class.ancestors.first != object_singleton_class &&
+        @object.method(method_name) &&
+        RUBY_VERSION.to_f >= 2.1
       end
 
       def define_proxy_method_on(target)
