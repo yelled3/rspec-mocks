@@ -84,14 +84,14 @@ module RSpec
         it "handles stubbing prepended methods" do
           klass = Class.new { prepend ToBePrepended; def value; :original; end }
           instance = klass.new
-          instance.stub(:value => :stubbed)
+          allow(instance).to receive(:value) { :stubbed }
           expect(instance.value).to eq :stubbed
         end
 
         it "handles stubbing prepended methods on singleton class" do
           klass = Class.new { class << self; prepend ToBePrepended; end; def self.value; :original; end }
           expect(klass.value).to eq :original
-          klass.stub(:value => :stubbed)
+          allow(klass).to receive(:value) { :stubbed }
           expect(klass.value).to eq :stubbed
         end
       end
