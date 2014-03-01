@@ -178,7 +178,7 @@ module RSpec
           expect(mod.hello).to eq(:hello)
         end
 
-        if RUBY_VERSION >= '2.0.0'
+        if RUBY_VERSION.to_f >= 2.0
           context "with a prepended module (ruby 2.0.0+)" do
             module ToBePrepended
               def existing_method
