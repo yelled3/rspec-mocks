@@ -207,6 +207,17 @@ module RSpec
 
     private
 
+      # In Ruby 2.0.0 and above prepend will alter the method lookup chain.
+      # We use an object's singleton class to define method doubles upon,
+      # however if the object has had it's singleton class (as opposed to
+      # it's actual class) prepended too then the the method lookup chain
+      # will look in the prepended module first, **before** the singleton
+      # class.
+      #
+      # This code works around that by providing a mock definition target
+      # that is either the singleton class, or if necessary, a prepended module
+      # of our own.
+      #
       if RUBY_VERSION.to_f >= 2.0
 
         def has_prepended_module?
