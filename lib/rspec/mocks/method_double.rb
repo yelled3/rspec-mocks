@@ -211,12 +211,19 @@ module RSpec
           Class === @object && object_singleton_class.ancestors.first != object_singleton_class && object_singleton_class.ancestors.first.method_defined?(method_name)
         end
 
+        class RSpecPrependedModule < Module
+        end
+
         def definition_target
           @definition_target ||=
             if has_prepended_module?
-              mod = Module.new
-              object_singleton_class.__send__ :prepend, mod
-              mod
+              if (prepended_module = object_singleton_class.ancestors.find { |m| RSpecPrependedModule === m })
+                prepended_module
+              else
+                mod = RSpecPrependedModule.new
+                object_singleton_class.__send__ :prepend, mod
+                mod
+              end
             else
               object_singleton_class
             end
